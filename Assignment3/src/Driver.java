@@ -13,11 +13,11 @@ public class Driver {
 		
 		System.out.println("Loading file "+fileName+".\n");;
 		
-		String query = scan.next();
+		String query = scan.nextLine();
 		
 		while(!query.equals("quit")){
-			
-			query = scan.next();
+			bn.printPercentage(query);
+			query = scan.nextLine();
 		}
 		scan.close();
 	}
