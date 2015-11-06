@@ -1,3 +1,11 @@
+
+/**
+ * Bay Net class for Assignment 3 in AI course. read data from the file
+ * and print the percentage by query.
+ * 
+ * @author Changsong Li
+ */
+
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -24,6 +32,7 @@ public class BayNet {
 		readFile(fileName);
 	}
 
+	// read file and save all data to the data structure.
 	private void readFile(String fileName) {
 		try {
 			buffer = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
@@ -44,181 +53,7 @@ public class BayNet {
 		}
 	}
 
-	public void printPercentage(String query) {
-		modifyQuery(query);
-		System.out.println(getPercentage(query));
-		cleanAllNodeValue();
-	}
-
-	private String getPercentage(String query) {
-		String ret = "";
-		double denominator = denominator(topo, 0);
-
-		cleanAllNodeValue();
-
-		String[] problems = problemSet.toArray(new String[0]);
-
-		for (int i = 0; i < problems.length; i++) {
-			ArrayList<String> parameters = nodeParameter.get(problems[i]);
-			for (int j = 0; j < parameters.size(); j++) {
-				evidenceMap.put(problems[i], parameters.get(j));
-				double numerator = denominator(topo, 0);
-				ret += ("P(" + parameters.get(j) + ") = " + (numerator / denominator));
-				if (j != parameters.size() - 1)
-					ret += ", ";
-
-				cleanAllNodeValue();
-			}
-			ret += "\n";
-		}
-
-		return ret;
-	}
-
-	private void cleanAllNodeValue() {
-
-		for (String key : allNode.keySet())
-			allNode.get(key).value = "";
-	}
-
-	private double denominator(String[] arr, int index) {
-		if (index == arr.length)
-			return 1;
-
-		String nodeName = arr[index];
-
-		if (evidenceMap.containsKey(nodeName)) {
-			double percentage = 1;
-			String value = evidenceMap.get(nodeName);
-			Node node = allNode.get(nodeName);
-			node.value = value;
-			if (node.hasParent) {
-				String key = "";
-				for (int i = 0; i < node.parentNodes.size(); i++)
-					key += node.parentNodes.get(i).value;
-
-				percentage = Double.valueOf(node.parentTable.get(key).get(value));
-			} else {
-				String possibility = node.noParentTable.get(value);
-				percentage = Double.valueOf(possibility);
-			}
-			return percentage * denominator(arr, index + 1);
-		} else {
-			double p = 1;
-			Node node = this.allNode.get(nodeName);
-			List<String> var = nodeParameter.get(nodeName);
-			if (node.hasParent) {
-				double total = 0;
-				String key = "";
-				for (int i = 0; i < node.parentNodes.size(); i++) {
-					key += node.parentNodes.get(i).value;
-				}
-
-				for (int i = 0; i < var.size(); i++) {
-					node.value = var.get(i);
-					String possibility = node.parentTable.get(key).get(var.get(i));
-					p = Double.valueOf(possibility);
-					total += p * denominator(arr, index + 1);
-				}
-				return total;
-
-			} else {
-				double total = 0;
-				for (int i = 0; i < var.size(); i++) {
-					node.value = var.get(i);
-					String possibility = node.noParentTable.get(var.get(i));
-					p = Double.valueOf(possibility);
-					total += p * denominator(arr, index + 1);
-				}
-				return total;
-			}
-		}
-	}
-
-	private void modifyQuery(String query) {
-		evidenceMap = new HashMap<String, String>();
-		problemSet = new LinkedHashSet<String>();
-
-		// has the evidence.
-		if (query.contains("|")) {
-			query = query.replaceAll(" ", "");
-			String[] arr = query.split("\\|");
-
-			String problem = arr[0];
-			String evidence = arr[1];
-
-			// modify the problem, and set to problem set.
-
-			// has more than 1 problem.
-			if (problem.contains(",")) {
-				String[] arr2 = problem.split(",");
-				for (int i = 0; i < arr2.length; i++) {
-					problemSet.add(arr2[i]);
-				}
-			}
-			// only 1 problem.
-			else
-				problemSet.add(problem);
-
-			// more than 1 evidence
-			if (evidence.contains(",")) {
-				String[] evidencesArray = evidence.split(",");
-				for (int i = 0; i < evidencesArray.length; i++) {
-					String[] equationEvidence = evidencesArray[i].split("=");
-					evidenceMap.put(equationEvidence[0], equationEvidence[1]);
-				}
-
-			} else {
-				String[] equationEvidence = evidence.split("=");
-				evidenceMap.put(equationEvidence[0], equationEvidence[1]);
-			}
-
-		}
-		// has no evidence
-		else
-			// not conditional probably problem.
-			problemSet.add(query.replace(" ", ""));
-
-	}
-
-	private String[] getTopologicalOrder() {
-		@SuppressWarnings("unchecked")
-		Vector<String> name = (Vector<String>) names.clone();
-
-		ArrayList<String> result = new ArrayList<String>();
-		getTopologicalOrder(name, result);
-
-		String[] ret = new String[result.size()];
-		ret = result.toArray(ret);
-
-		return ret;
-	}
-
-	private void getTopologicalOrder(Vector<String> names, ArrayList<String> result) {
-		if (names.size() == 0) {
-			return;
-		}
-
-		for (int i = 0; i < names.size(); i++) {
-			String nodeName = names.get(i);
-			Node node = allNode2.get(nodeName);
-
-			if (node.parentNodes.size() == 0) {
-				result.add(nodeName);
-				for (int j = 0; j < node.childNodes.size(); j++) {
-					Node childNode = node.childNodes.get(j);
-					for (int index = 0; index < childNode.parentNodes.size(); index++) {
-						if (childNode.parentNodes.get(i).name.equals(nodeName))
-							childNode.parentNodes.remove(i);
-					}
-				}
-				names.remove(i);
-				getTopologicalOrder(names, result);
-				break;
-			}
-		}
-	}
-
+	// get data reading from the file part 1.
 	private void initialNodes() {
 		String line = null;
 		try {
@@ -243,6 +78,7 @@ public class BayNet {
 		}
 	}
 
+	// get data reading from the file part 2.
 	private void setUpParents() {
 		String line = null;
 
@@ -276,6 +112,7 @@ public class BayNet {
 		}
 	}
 
+	// get data reading from the file part 3.
 	private void setUpCPT() {
 		String line = null;
 		try {
@@ -349,6 +186,193 @@ public class BayNet {
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+	}
+
+	// public method to be used in Driver, print for given query
+	public void printPercentage(String query) {
+		modifyQuery(query);
+		System.out.println(getPercentage(query));
+		cleanAllNodeValue();
+	}
+
+	// private method for printPercentage(String query), getting percentage.
+	private String getPercentage(String query) {
+		String ret = "";
+		double denominator = denominator(topo, 0);
+
+		cleanAllNodeValue();
+
+		String[] problems = problemSet.toArray(new String[0]);
+
+		for (int i = 0; i < problems.length; i++) {
+			ArrayList<String> parameters = nodeParameter.get(problems[i]);
+			for (int j = 0; j < parameters.size(); j++) {
+				evidenceMap.put(problems[i], parameters.get(j));
+				double numerator = denominator(topo, 0);
+				ret += ("P(" + parameters.get(j) + ") = " + (numerator / denominator));
+				if (j != parameters.size() - 1)
+					ret += ", ";
+
+				cleanAllNodeValue();
+			}
+			ret += "\n";
+		}
+
+		return ret;
+	}
+
+	// clean allNode 's value
+	private void cleanAllNodeValue() {
+
+		for (String key : allNode.keySet())
+			allNode.get(key).value = "";
+	}
+
+	// get denominator. Recursion.
+	private double denominator(String[] arr, int index) {
+		if (index == arr.length)
+			return 1;
+
+		String nodeName = arr[index];
+
+		if (evidenceMap.containsKey(nodeName)) {
+			double percentage = 1;
+			String value = evidenceMap.get(nodeName);
+			Node node = allNode.get(nodeName);
+			node.value = value;
+			if (node.hasParent) {
+				String key = "";
+				for (int i = 0; i < node.parentNodes.size(); i++) {
+					String v = node.parentNodes.get(i).value;
+					key += v;
+				}
+				percentage = Double.valueOf(node.parentTable.get(key).get(value));
+			} else {
+				String possibility = node.noParentTable.get(value);
+				percentage = Double.valueOf(possibility);
+			}
+			double ret = denominator(arr, index + 1) * percentage;
+
+			return ret;
+		} else {
+			double percentage = 1;
+			Node node = allNode.get(nodeName);
+			List<String> parameters = nodeParameter.get(nodeName);
+			if (node.hasParent) {
+				String key = "";
+				double total = 0;
+				for (int i = 0; i < node.parentNodes.size(); i++) {
+					String v = node.parentNodes.get(i).value;
+					key += v;
+				}
+
+				for (int i = 0; i < parameters.size(); i++) {
+					node.value = parameters.get(i);
+					HashMap<String, String> mapForKey = node.parentTable.get(key);
+					String possibility = mapForKey.get(node.value);
+					percentage = Double.valueOf(possibility);
+					total += denominator(arr, index + 1) * percentage;
+				}
+				return total;
+
+			} else {
+				double total = 0;
+				for (int i = 0; i < parameters.size(); i++) {
+					node.value = parameters.get(i);
+					String possibility = node.noParentTable.get(node.value);
+					percentage = Double.valueOf(possibility);
+					total += denominator(arr, index + 1) * percentage;
+				}
+				return total;
+			}
+		}
+	}
+
+	// modify the query to get all data we want.
+	private void modifyQuery(String query) {
+		evidenceMap = new HashMap<String, String>();
+		problemSet = new LinkedHashSet<String>();
+
+		// has the evidence.
+		if (query.contains("|")) {
+			query = query.replaceAll(" ", "");
+			String[] arr = query.split("\\|");
+
+			String problem = arr[0];
+			String evidence = arr[1];
+
+			// modify the problem, and set to problem set.
+
+			// has more than 1 problem.
+			if (problem.contains(",")) {
+				String[] arr2 = problem.split(",");
+				for (int i = 0; i < arr2.length; i++) {
+					problemSet.add(arr2[i]);
+				}
+			}
+			// only 1 problem.
+			else
+				problemSet.add(problem);
+
+			// more than 1 evidence
+			if (evidence.contains(",")) {
+				String[] evidencesArray = evidence.split(",");
+				for (int i = 0; i < evidencesArray.length; i++) {
+					String[] equationEvidence = evidencesArray[i].split("=");
+					evidenceMap.put(equationEvidence[0], equationEvidence[1]);
+				}
+
+			} else {
+				String[] equationEvidence = evidence.split("=");
+				evidenceMap.put(equationEvidence[0], equationEvidence[1]);
+			}
+
+		}
+		// has no evidence
+		else
+			// not conditional probably problem.
+			problemSet.add(query.replace(" ", ""));
+
+	}
+
+	// get Topological order of the node tree
+	private String[] getTopologicalOrder() {
+		@SuppressWarnings("unchecked")
+		Vector<String> name = (Vector<String>) names.clone();
+
+		ArrayList<String> result = new ArrayList<String>();
+		getTopologicalOrder(name, result);
+
+		String[] ret = new String[result.size()];
+		ret = result.toArray(ret);
+
+		return ret;
+	}
+
+	// recursion method for getTopologicalOrder()
+	private void getTopologicalOrder(Vector<String> names, ArrayList<String> result) {
+		if (names.size() == 0) {
+			return;
+		}
+
+		for (int i = 0; i < names.size(); i++) {
+			String nodeName = names.get(i);
+			Node node = allNode2.get(nodeName);
+
+			if (node.parentNodes.size() == 0) {
+				result.add(nodeName);
+				for (int j = 0; j < node.childNodes.size(); j++) {
+					Node childNode = node.childNodes.get(j);
+					for (int index = 0; index < childNode.parentNodes.size(); index++) {
+						if (childNode.parentNodes.get(i).name.equals(nodeName))
+							childNode.parentNodes.remove(i);
+					}
+				}
+				names.remove(i);
+				getTopologicalOrder(names, result);
+				break;
+			}
 		}
 	}
 
